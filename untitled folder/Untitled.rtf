@@ -1,0 +1,86 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2870
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;\red240\green0\blue92;\red23\green23\blue23;\red88\green138\blue67;
+\red202\green202\blue202;}
+{\*\expandedcolortbl;;\cssrgb\c96309\c12481\c43306;\cssrgb\c11778\c11778\c11763;\cssrgb\c41525\c59950\c33208;
+\cssrgb\c83229\c83229\c83125;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww38200\viewh24100\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs44 \cf2 \cb3 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec4 # from flask import Flask, render_template, request\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 # import pickle\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 # import requests\cf2 \cb1 \strokec5 \
+\
+\cf2 \cb3 \strokec4 # app = Flask(__name__)\cf2 \cb1 \strokec5 \
+\
+\cf2 \cb3 \strokec4 # # Load pickle files\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 # movies = pickle.load(open("movie_list.pkl", "rb"))\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 # similarity = pickle.load(open("similarity.pkl", "rb"))\cf2 \cb1 \strokec5 \
+\
+\cf2 \cb3 \strokec4 # API_KEY = "6debf3ee8c45d785666185ca0e5bd059"\cf2 \cb1 \strokec5 \
+\
+\
+\cf2 \cb3 \strokec4 # def fetch_poster(movie_id):\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #     url = f"https://api.themoviedb.org/3/movie/\{movie_id\}?api_key=\{API_KEY\}"\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #     data = requests.get(url).json()\cf2 \cb1 \strokec5 \
+\
+\cf2 \cb3 \strokec4 #     if "poster_path" in data:\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #         return "https://image.tmdb.org/t/p/w500/" + data["poster_path"]\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #     else:\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #         return ""\cf2 \cb1 \strokec5 \
+\
+\
+\cf2 \cb3 \strokec4 # def recommend(movie):\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #     movie_index = movies[movies["title"] == movie].index[0]\cf2 \cb1 \strokec5 \
+\
+\cf2 \cb3 \strokec4 #     distance = similarity[movie_index]\cf2 \cb1 \strokec5 \
+\
+\cf2 \cb3 \strokec4 #     movie_list = sorted(\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #         list(enumerate(distance)),\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #         reverse=True,\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #         key=lambda x: x[1]\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #     )\cf2 \cb1 \strokec5 \
+\
+\cf2 \cb3 \strokec4 #     recommended = []\cf2 \cb1 \strokec5 \
+\
+\cf2 \cb3 \strokec4 #     for i in movie_list[1:6]:\cf2 \cb1 \strokec5 \
+\
+\cf2 \cb3 \strokec4 #         movie = movies.iloc[i[0]]\cf2 \cb1 \strokec5 \
+\
+\cf2 \cb3 \strokec4 #         recommended.append(\{\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #             "title": movie["title"],\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #             "poster": fetch_poster(movie["movie_id"])\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #         \})\cf2 \cb1 \strokec5 \
+\
+\cf2 \cb3 \strokec4 #     return recommended\cf2 \cb1 \strokec5 \
+\
+\
+\cf2 \cb3 \strokec4 # @app.route("/", methods=["GET", "POST"])\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 # def home():\cf2 \cb1 \strokec5 \
+\
+\cf2 \cb3 \strokec4 #     recommended_movies = []\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #     selected_movie = ""\cf2 \cb1 \strokec5 \
+\
+\cf2 \cb3 \strokec4 #     if request.method == "POST":\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #         selected_movie = request.form["movie"]\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #         recommended_movies = recommend(selected_movie)\cf2 \cb1 \strokec5 \
+\
+\cf2 \cb3 \strokec4 #     return render_template(\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #         "index.html",\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #         movie_list=movies["title"].values,\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #         recommendations=recommended_movies,\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #         selected_movie=selected_movie\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #     )\cf2 \cb1 \strokec5 \
+\
+\cf2 \cb3 \strokec4 # if __name__ == "__main__":\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #     # app.run(debug=True)\cf2 \cb1 \strokec5 \
+\cf2 \cb3 \strokec4 #     app.run(debug=True, use_reloader=False)\cf2 \cb1 \strokec5 \
+\
+\
+\
+\
+\
+\
+}
