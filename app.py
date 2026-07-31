@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request
+import os
 import pickle
 import requests
 from sklearn.metrics.pairwise import cosine_similarity
@@ -10,6 +11,7 @@ movies = pickle.load(open("movie_list.pkl", "rb"))
 vectors = pickle.load(open("movie_vectors.pkl", "rb"))  # sparse matrix, ~1.6MB
 
 API_KEY = "6debf3ee8c45d785666185ca0e5bd059"
+
 
 
 def fetch_poster(movie_id):
@@ -46,19 +48,29 @@ def home():
 
     selected_movie = ""
     recommendations = []
+    error = None
 
     if request.method == "POST":
-        selected_movie = request.form["movie"]
-        recommendations = recommend(selected_movie)
+        selected_movie = request.form.get("movie", "").strip()
+        if selected_movie:
+            matched = movies[movies["title"] == selected_movie]
+            if not matched.empty:
+                recommendations = recommend(selected_movie)
+            else:
+                error = "Movie not found. Please type a valid title."
+        else:
+            error = "Please enter a movie name."
 
     return render_template(
         "index.html",
-        movie_list=movies["title"],
+        movie_list=movies["title"].tolist(),
         recommendations=recommendations,
-        selected_movie=selected_movie
+        selected_movie=selected_movie,
+        error=error,
     )
 
 
 if __name__ == "__main__":
     print("Starting Flask...")
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=True, port=port)
