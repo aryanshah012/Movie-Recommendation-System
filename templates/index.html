@@ -6,95 +6,129 @@
     <title>Movie Recommender System</title>
 
     <style>
+    *{
+        margin:0;
+        padding:0;
+        box-sizing:border-box;
+        font-family:Arial, Helvetica, sans-serif;
+    }
 
-        *{
-            margin:0;
-            padding:0;
-            box-sizing:border-box;
-            font-family:Arial, Helvetica, sans-serif;
-        }
+    body{
+        background:linear-gradient(135deg,#141E30,#243B55);
+        color:white;
+        text-align:center;
+    }
 
-        body{
-            background:linear-gradient(135deg,#141E30,#243B55);
-            color:white;
-            text-align:center;
-        }
+    .container{
+        width:90%;
+        margin:auto;
+        padding:40px 0;
+    }
 
-        .container{
-            width:90%;
-            margin:auto;
-            padding:40px 0;
-        }
+    h1{
+        font-size:45px;
+        margin-bottom:30px;
+        color:#00e5ff;
+    }
 
-        h1{
-            font-size:45px;
-            margin-bottom:30px;
-            color:#00e5ff;
-        }
+    form{
+        margin-bottom:40px;
+    }
 
-        form{
-            margin-bottom:40px;
-        }
+    select{
+        width:350px;
+        padding:12px;
+        border:none;
+        border-radius:8px;
+        font-size:16px;
+        outline:none;
+    }
 
-        select{
-            width:350px;
-            padding:12px;
-            border:none;
-            border-radius:8px;
-            font-size:16px;
-            outline:none;
-        }
+    button{
+        padding:12px 25px;
+        margin-left:10px;
+        border:none;
+        border-radius:8px;
+        background:#00b894;
+        color:white;
+        font-size:16px;
+        cursor:pointer;
+        transition:0.3s;
+    }
 
-        button{
-            padding:12px 25px;
-            margin-left:10px;
-            border:none;
-            border-radius:8px;
-            background:#00b894;
-            color:white;
-            font-size:16px;
-            cursor:pointer;
-            transition:0.3s;
-        }
+    button:hover{
+        background:#009975;
+        transform:scale(1.05);
+    }
 
-        button:hover{
-            background:#009975;
-            transform:scale(1.05);
-        }
+    .movies{
+        display:flex;
+        justify-content:center;
+        flex-wrap:wrap;
+        gap:25px;
+    }
 
-        .movies{
-            display:flex;
-            justify-content:center;
-            flex-wrap:wrap;
-            gap:25px;
-        }
+    .card{
+        width:200px;
+        background:white;
+        color:black;
+        border-radius:12px;
+        overflow:hidden;
+        box-shadow:0 8px 20px rgba(0,0,0,0.4);
+        transition:0.3s;
+    }
 
-        .card{
-            width:200px;
-            background:white;
-            color:black;
-            border-radius:12px;
-            overflow:hidden;
-            box-shadow:0 8px 20px rgba(0,0,0,0.4);
-            transition:0.3s;
-        }
+    .card:hover{
+        transform:translateY(-10px);
+    }
 
-        .card:hover{
-            transform:translateY(-10px);
-        }
+    .card img{
+        width:100%;
+        height:300px;
+        object-fit:cover;
+    }
 
-        .card img{
-            width:100%;
-            height:300px;
-            object-fit:cover;
-        }
+    .card h3{
+        padding:15px;
+        font-size:18px;
+    }
 
-        .card h3{
-            padding:15px;
-            font-size:18px;
-        }
+    /* Autocomplete styles */
+    .suggestions{
+        position:relative;
+        display:inline-block;
+        width:350px;
+        text-align:left;
+    }
 
+    .suggestions ul{
+        position:absolute;
+        top:100%;
+        left:0;
+        right:0;
+        background:rgba(255,255,255,0.95);
+        color:#000;
+        max-height:220px;
+        overflow:auto;
+        border-radius:8px;
+        box-shadow:0 8px 20px rgba(0,0,0,0.4);
+        z-index:1000;
+    }
+
+    .suggestions li{
+        padding:8px 12px;
+        cursor:pointer;
+    }
+
+    .suggestions li:hover{
+        background:#f0f0f0;
+    }
+
+    .prediction-chip{
+        display:inline-block;padding:8px 12px;border-radius:20px;background:rgba(255,255,255,0.1);cursor:pointer;
+    }
     </style>
+
 
 </head>
 
@@ -104,27 +138,18 @@
 
 <h1>🎬 Movie Recommender System</h1>
 
-<form method="POST">
+<form method="POST" autocomplete="off">
+    <div class="suggestions">
+        <input id="movie-input" type="text" name="movie" placeholder="Type a movie name..."
+               value="{{ selected_movie }}" autocomplete="off"
+               style="width:350px;padding:12px;border:none;border-radius:8px;font-size:16px;outline:none;margin-bottom:10px;">
+        <ul id="suggest-list" style="display:none;"></ul>
+    </div>
 
-
-<select name="movie">
-
-    {% for movie in movie_list %}
-
-    <option value="{{ movie }}"
-        {% if movie == selected_movie %}selected{% endif %}>
-        {{ movie }}
-    </option>
-
-    {% endfor %}
-
-</select>
-
-<button type="submit">
-Recommend
-</button>
-
+    <button type="submit">Recommend</button>
 </form>
+
+<!-- Upcoming predictions removed -->
 
 <div class="movies">
 
@@ -141,6 +166,56 @@ Recommend
 {% endfor %}
 
 </div>
+
+<script>
+const allTitles = {{ movie_list | tojson | safe }};
+
+const input = document.getElementById('movie-input');
+const suggestList = document.getElementById('suggest-list');
+
+input.addEventListener('input', function () {
+    const query = this.value.trim().toLowerCase();
+    if (!query) {
+        suggestList.style.display = 'none';
+        return;
+    }
+
+    const starts = [];
+    const includes = [];
+    for (let i = 0; i < allTitles.length; i++){
+        const t = allTitles[i];
+        const tl = t.toLowerCase();
+        if (tl.startsWith(query)) starts.push(t);
+        else if (tl.includes(query)) includes.push(t);
+        if (starts.length + includes.length >= 8) break;
+    }
+
+    const matches = starts.concat(includes).slice(0, 8);
+
+    if (matches.length === 0){
+        suggestList.style.display = 'none';
+    } else {
+        suggestList.style.display = 'block';
+        suggestList.innerHTML = matches.map(title => `<li>${title}</li>`).join('');
+    }
+});
+
+// Click on suggestion
+suggestList.addEventListener('click', function(e){
+    if (e.target && e.target.nodeName === 'LI'){
+        input.value = e.target.textContent;
+        suggestList.style.display = 'none';
+    }
+});
+
+// Hide suggestions when clicking outside
+document.addEventListener('click', function(e){
+    if (!e.target.closest('.suggestions')){
+        suggestList.style.display = 'none';
+    }
+});
+
+</script>
 
 </div>
 
